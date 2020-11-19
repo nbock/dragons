@@ -139,6 +139,7 @@ class Board:
 
 
 # some tests meant to show functionality, should be deleted eventually
+'''
 b = Board(9, 9, 10)
 b.show()
 b.reveal(2, 1)
@@ -147,3 +148,4 @@ b.show()
 
 print(b.is_loss())
 print(b.is_win())
+'''
