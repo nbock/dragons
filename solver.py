@@ -1,4 +1,4 @@
-from Board import *
+from game import *
 from CSP import *
 import itertools
 
