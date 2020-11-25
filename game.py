@@ -3,10 +3,11 @@ Board class for a Minesweeper board
 -1 represents a mine
 An integer represents mines surrounding an x,y point
 
-An array of tuples is meant to represent the board: (adjacent_mines, hidden_status)
+An array of tuples is meant to represent the board: (adjacent_mines, hidden_status, flag_status)
 
 adjacent_mines can be -1, 0, 1, 2, 3
 hidden_status can be True if the square is visible and False otherwise
+flag_status can be True if there is a flag on the current square and False otherwise
 
 Nolan Bock - 10/26/20
 """
@@ -29,7 +30,7 @@ class Board:
         self.rows = rows
         self.cols = cols
         self.mines = mines
-        self.board = [[(0, False) for i in range(rows)] for j in range(cols)]
+        self.board = [[(0, False, False) for i in range(rows)] for j in range(cols)]
 
         # assign the mines to random locations, needs to be a set to make sure 10 are assigned
         mine_points = set()
@@ -95,6 +96,24 @@ class Board:
         if 0 <= row < self.rows and 0 <= col < self.cols:
             self.board[row][col] = (self.board[row][col][0], True)
 
+    def flag(self, row, col):
+        """
+        Flags the input row and column
+        """
+        self.board[row][col][2] = True
+
+    def is_flag(self, row, col):
+        """
+        Boolean representing if the current location is marked with a is_flag
+        """
+        return self.board[row][col][2]
+
+    def is_show(self, row, col):
+        """
+        Boolean representing if the current location is revealed
+        """
+        return self.board[row][col][0] >= 0 and self.board[row][col][1] == True
+
     def is_loss(self):
         """
         Terminal state evaluation, returns if the current state is a losing state
@@ -108,6 +127,35 @@ class Board:
                     return True
 
         return False
+
+    def get_surrounding(self, row, col):
+        """
+        Gets the surrounding tiles to be updated
+        """
+        surrounding = ((-1, -1), (-1,  0), (-1,  1),
+                       (0 , -1),           (0 ,  1),
+                       (1 , -1), (1 ,  0), (1 ,  1))
+
+        neighbors = list()
+
+        for pos in surrounding:
+            temp_row = row + pos[0]
+            temp_col = col + pos[1]
+            if 0 <= temp_row < self.rows and 0 <= temp_col < self.cols:
+                neighbors.append(self.board[temp_row][temp_col])
+
+        return neighbors
+
+    # TODO: CLARA AND NOLAN DISCUSS: do we need an update surrounding? I think how we hide or show value naturally does this
+    def update_surrounding(self, row, col):
+        """
+        Update the surrounding values adding the passed in value to the current
+        """
+        cells = self.get_surrounding(row, col)
+        # for now does nothing pending if we need this
+        # formerly, it updated the surrounding values
+        # I took value out of the parameters, too
+
 
     def is_win(self):
         """

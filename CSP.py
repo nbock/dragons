@@ -141,9 +141,9 @@ class CSP:
         self.cons = list()
         self.map = dict()
         for variable in vars:
-            self.append_variable(v)
+            self.add_variable(v)
 
-    def append_variable(self, var):
+    def add_variable(self, var):
         if not type(var) is Variable:
             raise TypeError("All variables should be Variables")
         else:
