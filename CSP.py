@@ -240,31 +240,6 @@ class Backtrack:
         self.unasgn_vars.append(var)
 
     def bt_search(self,propagator):
-        '''Try to solve the CSP using specified propagator routine
-           propagator == a function with the following template
-           propagator(csp, newly_instantiated_variable=None)
-           ==> returns (True/False, [(Variable, Value), (Variable, Value) ...]
-           csp is a CSP object---the propagator can use this to get access
-           to the variables and constraints of the problem.
-           newly_instaniated_variable is an optional argument.
-           if newly_instantiated_variable is not None:
-               then newly_instantiated_variable is the most
-               recently assigned variable of the search.
-           else:
-               progator is called before any assignments are made
-               in which case it must decide what processing to do
-               prior to any variables being assigned.
-           The propagator returns True/False and a list of (Variable, Value) pairs.
-           Return is False if a deadend has been detected by the propagator.
-             in this case bt_search will backtrack
-           return is true if we can continue.
-           The list of variable values pairs are all of the values
-           the propagator pruned (using the variable's prune_value method).
-           bt_search NEEDS to know this in order to correctly restore these
-           values when it undoes a variable assignment.
-           NOTE propagator SHOULD NOT prune a value that has already been
-           pruned! Nor should it prune a value twice'''
-
         self.clear_stats()
         stime = time.process_time()
 
@@ -275,7 +250,7 @@ class Backtrack:
             if not v.is_assigned():
                 self.unasgn_vars.append(v)
 
-        status, prunings = propagator(self.csp) #initial propagate no assigned variables.
+        status, prunings = propagator(self.csp) # initial propagate no assigned variables.
         self.nPrunings = self.nPrunings + len(prunings)
 
         if self.TRACE:
@@ -308,7 +283,7 @@ class Backtrack:
             print('  ' * level, "bt_recurse level ", level)
 
         if not self.unasgn_vars:
-            #all variables assigned
+            # all variables assigned
             return True
         else:
             var = self.extractMRVvar()
@@ -343,13 +318,6 @@ class Backtrack:
             self.restoreUnasgnVar(var)
             return False
 
-    #########################################
-    #########################################
-    #######                          ########
-    ####### modified for minesweeper ########
-    #######                          ########
-    #########################################
-    #########################################
 
     def bt_search_MS(self,propagator):
         '''This is modified from bt_search function.
@@ -360,14 +328,12 @@ class Backtrack:
         self.clear_stats()
         stime = time.process_time()
 
-        #self.restore_all_variable_domains()
-
         self.unasgn_vars = []
         for v in self.csp.vars:
             if not v.is_assigned():
                 self.unasgn_vars.append(v)
 
-        status, prunings = propagator(self.csp) #initial propagate no assigned variables.
+        status, prunings = propagator(self.csp) # initial propagate no assigned variables.
         self.nPrunings = self.nPrunings + len(prunings)
 
         if self.TRACE:
@@ -378,19 +344,13 @@ class Backtrack:
             print("CSP{} detected contradiction at root".format(
                 self.csp.name))
         else:
-            status = self.bt_recurse_MS(propagator, 1)   #now do recursive search
+            status = self.bt_recurse_MS(propagator, 1) # now do recursive search
 
 
         self.restoreValues(prunings)
         if status == False:
             print("CSP{} unsolved. Has no solutions".format(self.csp.name))
-        # if status == True:
-        #     print("CSP {} solved. CPU Time used = {}".format(self.csp.name,
-        #                                                      time.process_time() - stime))
-        #     self.csp.print_soln()
 
-        #print("bt_search finished")
-        #self.print_stats()
         return self.nDecisions
 
     def bt_recurse_MS(self, propagator, level):
@@ -403,7 +363,7 @@ class Backtrack:
             print('  ' * level, "bt_recurse level ", level)
 
         if not self.unasgn_vars:
-            #all variables assigned
+            # all variables assigned
             return True
         else:
             var = self.extractMRVvar_MS()
@@ -444,7 +404,6 @@ class Backtrack:
         it's the only unassign variable in a constraint.
         Would be faster to use heap...but this is not production code.
         '''
-        #print(self.unasgn_vars)
         for var in self.unasgn_vars:
             if var.cur_domain_size() == 1:
                 self.unasgn_vars.remove(var)
