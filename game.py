@@ -6,8 +6,9 @@ An integer represents mines surrounding an x,y point
 An array of tuples is meant to represent the board: (adjacent_mines, hidden_status, flag_status)
 
 adjacent_mines can be -1, 0, 1, 2, 3
-hidden_status can be True if the square is visible and False otherwise
+visbility_status can be True if the square is visible and False otherwise
 flag_status can be True if there is a flag on the current square and False otherwise
+pos is the x,y position of the current tile
 
 Nolan Bock - 10/26/20
 """
@@ -30,7 +31,7 @@ class Board:
         self.rows = rows
         self.cols = cols
         self.mines = mines
-        self.board = [[(0, False, False) for i in range(rows)] for j in range(cols)]
+        self.board = [[(0, False, False, (i, j)) for i in range(rows)] for j in range(cols)]
 
         # assign the mines to random locations, needs to be a set to make sure 10 are assigned
         mine_points = set()
@@ -38,7 +39,7 @@ class Board:
             x = random.randint(0, rows - 1)
             y = random.randint(0, cols - 1)
             mine_points.add((x, y))
-            self.board[x][y] = (-1, self.board[x][y][1])
+            self.board[x][y] = (-1, self.board[x][y][1], self.board[x][y][2], (x, y))
 
         # iterate through points, assigning numeric values to non-mine locations
         for row in range(rows):
@@ -73,7 +74,7 @@ class Board:
                 if self.check(row + 1, col + 1):
                     mines += 1
 
-                self.board[row][col] = (mines, self.board[row][col][1])
+                self.board[row][col] = (mines, self.board[row][col][1], False, (row, col))
 
     def check(self, to_row, to_col):
         """
@@ -94,7 +95,8 @@ class Board:
         :return: nothing
         """
         if 0 <= row < self.rows and 0 <= col < self.cols:
-            self.board[row][col] = (self.board[row][col][0], True)
+            self.board[row][col] = (self.board[row][col][0], True,
+            self.board[row][col][2], self.board[row][col][3])
 
     def flag(self, row, col):
         """
@@ -123,7 +125,7 @@ class Board:
         for row in range(self.rows):
             for col in range(self.cols):
                 # if we uncovered a mine, we lost
-                if self.board[row][col][0] == -1 and not self.board[row][col][1]:
+                if self.board[row][col][0] == -1 and self.board[row][col][1]:
                     return True
 
         return False
@@ -170,7 +172,7 @@ class Board:
         for row in range(self.rows):
             for col in range(self.cols):
                 # if any non-mine is not uncovered, game is not won
-                if self.board[row][col][0] != -1 and self.board[row][col][1]:
+                if self.board[row][col][0] != -1 and not self.board[row][col][1]:
                     return False
 
         # if not, game is won
@@ -187,7 +189,6 @@ class Board:
 
 
 # some tests meant to show functionality, should be deleted eventually
-'''
 b = Board(9, 9, 10)
 b.show()
 b.reveal(2, 1)
@@ -196,4 +197,3 @@ b.show()
 
 print(b.is_loss())
 print(b.is_win())
-'''
