@@ -1,4 +1,4 @@
-'''
+get_constraints'''
 CSP Class and necessary dependencies
 '''
 
@@ -137,7 +137,7 @@ class Constraint:
 
 class CSP:
     def __init__(self, vars=list()):
-        self.vars = vars
+         = vars
         self.cons = list()
         self.map = dict()
         for variable in vars:
@@ -410,9 +410,9 @@ class Backtrack:
                 return var
 
         for con in self.csp.get_constraints():
-            if con.get_n_unasgn() == 0:
+            if con.get_unassigned() == 0:
                 continue
-            if con.get_n_unasgn() == 1:
+            if con.get_unassigned() == 1:
                 mv = con.get_unasgn_vars()[0]
                 self.unasgn_vars.remove(mv)
                 return mv
