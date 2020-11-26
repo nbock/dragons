@@ -409,7 +409,7 @@ class Backtrack:
                 self.unasgn_vars.remove(var)
                 return var
 
-        for con in self.csp.get_all_cons():
+        for con in self.csp.get_constraints():
             if con.get_n_unasgn() == 0:
                 continue
             if con.get_n_unasgn() == 1:
