@@ -14,7 +14,8 @@ Nolan Bock - 10/26/20
 """
 
 import random
-
+from CSP import *
+from propagators import *
 
 class Board:
     """
@@ -94,9 +95,50 @@ class Board:
         :param col: an int, the col of the square to reveal
         :return: nothing
         """
-        if 0 <= row < self.rows and 0 <= col < self.cols:
-            self.board[row][col] = (self.board[row][col][0], True,
-            self.board[row][col][2], self.board[row][col][3])
+        # if we already revealed it or have it marked as a flag
+        if self.is_show(row, col) or self.is_flag(row, col):
+            return
+
+        # Case: hits a non-mine
+        self.show(row, col)
+        if self.is_mine():
+            self.gameover(row, col)
+
+        # Case: hits a free space, we show all empty neighbors from here
+        elif self.board[row][col][0] == 0:
+            tiles = [self.board[row][col]]
+            while tiles:
+                temp_tile = tiles.pop()
+                surrounding = self.get_surrounding(temp_tile[3][0], temp_tile[3][1])
+                for neighbor in surrounding:
+                    row = neighbor[3][0]
+                    col = neighbor[3][1]
+                    if not self.is_show(row, col) and neighbor[0] == 0:
+                        tiles.append(neighbor)
+                    self.show(row, col)
+
+        # Did we win?
+        if self.is_win():
+            self.gameover()
+
+
+    def gameover(self, row=None, col=None):
+        self.is_over = True
+        # we won, baby
+        if row == None and col == None:
+            print("You won! Hell ya!")
+        else:
+            print("You lost!")
+            print("Hit mine on (" + str(row) + ", " + str(col) + ").")
+
+    def show(self, row, col):
+        self.board[row][col] = (self.board[row][col][0], True, self.board[row][col][2], self.board[row][col][3])
+
+    def is_show(self, row, col):
+        return self.board[row][col][1]
+
+    def is_mine(self, row, col):
+        return self.board[row][col][0] == -1
 
     def flag(self, row, col):
         """
@@ -130,35 +172,6 @@ class Board:
 
         return False
 
-    def get_surrounding(self, row, col):
-        """
-        Gets the surrounding tiles to be updated
-        """
-        surrounding = ((-1, -1), (-1,  0), (-1,  1),
-                       (0 , -1),           (0 ,  1),
-                       (1 , -1), (1 ,  0), (1 ,  1))
-
-        neighbors = list()
-
-        for pos in surrounding:
-            temp_row = row + pos[0]
-            temp_col = col + pos[1]
-            if 0 <= temp_row < self.rows and 0 <= temp_col < self.cols:
-                neighbors.append(self.board[temp_row][temp_col])
-
-        return neighbors
-
-    # TODO: CLARA AND NOLAN DISCUSS: do we need an update surrounding? I think how we hide or show value naturally does this
-    def update_surrounding(self, row, col):
-        """
-        Update the surrounding values adding the passed in value to the current
-        """
-        cells = self.get_surrounding(row, col)
-        # for now does nothing pending if we need this
-        # formerly, it updated the surrounding values
-        # I took value out of the parameters, too
-
-
     def is_win(self):
         """
         Terminal state evaluation, returns if the current state is a winning state
@@ -177,6 +190,63 @@ class Board:
 
         # if not, game is won
         return True
+
+    def get_surrounding(self, row, col):
+        """
+        Gets the surrounding tiles to be updated
+        """
+        surrounding = ((-1, -1), (-1,  0), (-1,  1),
+                       (0 , -1),           (0 ,  1),
+                       (1 , -1), (1 ,  0), (1 ,  1))
+
+        neighbors = list()
+
+        for pos in surrounding:
+            temp_row = row + pos[0]
+            temp_col = col + pos[1]
+            if 0 <= temp_row < self.rows and 0 <= temp_col < self.cols:
+                neighbors.append(self.board[temp_row][temp_col])
+
+        return neighbors
+
+    def solve(self):
+        """
+        Solve the game (we hope)
+        """
+        if self.is_loss() or self.is_win():
+            return
+
+        for row in range(self.rows):
+            for col in range(self.cols):
+                # make sure everything is unflagged
+                if self.is_flag(row, col):
+                    self.board[row][col] = (self.board[row][col][0], self.board[row][col][1], False, self.board[row][col][3])
+
+        while not self.is_loss() and not self.is_win():
+            assigned = self.solve_step()
+            if not assigned:
+                choice = self.guess_move() # need to make sure this returns correctly
+                self.reveal(choice) # need to make sure this returns correctly
+
+    def solve_step(self):
+        is_assigned = False
+
+        csp = CSP.model(self)
+
+        solver = BT(csp)
+        solver.bt_search_MS(prop_GAC)
+        for var in csp.get_vars():
+
+
+    # TODO: CLARA AND NOLAN DISCUSS: do we need an update surrounding? I think how we hide or show value naturally does this
+    def update_surrounding(self, row, col):
+        """
+        Update the surrounding values adding the passed in value to the current
+        """
+        cells = self.get_surrounding(row, col)
+        # for now does nothing pending if we need this
+        # formerly, it updated the surrounding values
+        # I took value out of the parameters, too
 
     def show(self):
         """

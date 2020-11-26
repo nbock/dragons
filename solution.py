@@ -6,7 +6,7 @@ ROWS = 9
 COLS = 9
 MINES = 10
 
-# TODOD: NOTE TO SELF (NOLAN): might need to initilaize the board with position
+# TODO: NOTE TO SELF (NOLAN): might need to initilaize the board with position
 # ...now I think I might want to remove it
 def model():
     csp = CSP()
