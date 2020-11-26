@@ -1,4 +1,4 @@
-get_constraints'''
+'''
 CSP Class and necessary dependencies
 '''
 
@@ -137,7 +137,7 @@ class Constraint:
 
 class CSP:
     def __init__(self, vars=list()):
-         = vars
+        self.vars = vars
         self.cons = list()
         self.map = dict()
         for variable in vars:
