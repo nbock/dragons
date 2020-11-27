@@ -63,7 +63,7 @@ class Variable:
         '''Restore value to CURRENT domain'''
         self.currentdomain[self.value_index(value)] = True
 
-    def current_domain(self, value):
+    def in_current_domain(self, value):
         '''
         check if the value is in the current domain
         '''
@@ -92,7 +92,7 @@ class Variable:
         return self.assignedValue is not None
 
     def assign(self, value):
-        if self.is_assigned() or not self.current_domain(value):
+        if self.is_assigned() or not self.in_current_domain(value):
             return
         self.assignedValue = value
 
@@ -221,7 +221,6 @@ class Backtrack:
     def trace_off(self):
         '''Turn search trace off'''
         self.TRACE = False
-
 
     def clear_stats(self):
         '''Initialize counters'''
@@ -380,6 +379,7 @@ class Backtrack:
         if status == False:
             print("CSP{} unsolved. Has no solutions".format(self.csp.name))
 
+        print(self.nDecisions)
         return self.nDecisions
 
     def bt_recurse_MS(self, propagator, level):
@@ -392,7 +392,7 @@ class Backtrack:
             print('  ' * level, "bt_recurse level ", level)
 
         if not self.unasgn_vars:
-            # all variables assigned
+            print("all variables assigned")
             return True
         else:
             var = self.extractMRVvar_MS()

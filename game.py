@@ -244,6 +244,7 @@ class Board:
                 c_row = choice[3][0]
                 c_col = choice[3][1]
                 self.reveal(c_row, c_col)
+                print("Guessed: (" + str(c_row) + ", " + str(c_col) + ")")
 
     def guess_move(self):
         tiles = list()
@@ -282,14 +283,17 @@ class Board:
                 # need the variable to be on the board
                 continue
 
+            print("Row, col: " + str(row) + ", " + str(col))
             if var.get_assigned_value() == 1:
                 if not self.board[row][col].is_flag():
                     self.flag(row, col)
                     is_assigned = True
-                elif var.get_assigned_value() == 0:
-                    if not self.is_show(row, col):
-                        self.reveal(row, col)
-                        is_assigned = True
+            elif var.get_assigned_value() == 0:
+                if not self.is_show(row, col):
+                    self.reveal(row, col)
+                    is_assigned = True
+
+            print("Assigned value: " + str(var.get_assigned_value()))
 
         return is_assigned
 

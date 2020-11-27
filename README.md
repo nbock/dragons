@@ -24,5 +24,6 @@ based on a routine specified through propagators.py.
 
 
 
-* STATUS UPDATE FOR CLARA & NOLAN *
-If you run game.py, you can see something is wrong in the main solving loop. We know when we lose, but usually running it just results in a hang
+STATUS UPDATE FOR CLARA & NOLAN
+The variable get_assigned_value function is always None, so that needs to be fixed
+Something is broken with solver.bt_search_MS(prop_GAC)
