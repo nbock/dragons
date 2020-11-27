@@ -14,6 +14,7 @@ Nolan Bock - 10/26/20
 """
 
 import random
+import solution
 from CSP import *
 from propagators import *
 
@@ -33,6 +34,7 @@ class Board:
         self.cols = cols
         self.mines = mines
         self.board = [[(0, False, False, (i, j)) for i in range(rows)] for j in range(cols)]
+        self.is_over = False
 
         # assign the mines to random locations, needs to be a set to make sure 10 are assigned
         mine_points = set()
@@ -101,7 +103,7 @@ class Board:
 
         # Case: hits a non-mine
         self.show(row, col)
-        if self.is_mine():
+        if self.is_mine(row, col):
             self.gameover(row, col)
 
         # Case: hits a free space, we show all empty neighbors from here
@@ -144,7 +146,17 @@ class Board:
         """
         Flags the input row and column
         """
-        self.board[row][col][2] = True
+        if self.is_show(row, col):
+            return
+
+        # flag or unflag it
+        if self.is_flag(row, col):
+            self.board[row][col] = (self.board[row][col][0], self.board[row][col][1], False, self.board[row][col][3])
+        else:
+            self.board[row][col] = (self.board[row][col][0], self.board[row][col][1], True, self.board[row][col][3])
+
+        if self.is_win():
+            self.gameover()
 
     def is_flag(self, row, col):
         """
@@ -167,7 +179,7 @@ class Board:
         for row in range(self.rows):
             for col in range(self.cols):
                 # if we uncovered a mine, we lost
-                if self.board[row][col][0] == -1 and self.board[row][col][1]:
+                if self.get_value(row, col) == -1 and self.is_show(row, col):
                     return True
 
         return False
@@ -185,7 +197,7 @@ class Board:
         for row in range(self.rows):
             for col in range(self.cols):
                 # if any non-mine is not uncovered, game is not won
-                if self.board[row][col][0] != -1 and not self.board[row][col][1]:
+                if self.get_value(row, col) != -1 and not self.is_show(row, col):
                     return False
 
         # if not, game is won
@@ -216,27 +228,70 @@ class Board:
         if self.is_loss() or self.is_win():
             return
 
+        # ensure no flags are set (this would be an error state)
+        # TODO: do we need this?
         for row in range(self.rows):
             for col in range(self.cols):
                 # make sure everything is unflagged
                 if self.is_flag(row, col):
                     self.board[row][col] = (self.board[row][col][0], self.board[row][col][1], False, self.board[row][col][3])
 
-        while not self.is_loss() and not self.is_win():
+        # self.is_loss() and not self.is_win()
+        while not self.is_over:
             assigned = self.solve_step()
             if not assigned:
                 choice = self.guess_move() # need to make sure this returns correctly
-                self.reveal(choice) # need to make sure this returns correctly
+                c_row = choice[3][0]
+                c_col = choice[3][1]
+                self.reveal(c_row, c_col)
+
+    def guess_move(self):
+        tiles = list()
+        corners = [self.board[0][0], self.board[0][self.cols - 1],
+                   self.board[self.rows - 1][0], self.board[self.rows - 1][self.cols - 1]]
+
+        # prioritize choosing a corner
+        for tile in corners:
+            row = tile[3][0]
+            col = tile[3][0]
+            if not self.is_show(row, col) and not self.is_flag(row, col):
+                return tile
+
+        for row in range(self.rows):
+            for col in range(self.cols):
+                if not self.is_show(row, col) and not self.is_flag(row, col):
+                    tiles.append(self.board[row][col])
+
+        return random.choice(tiles)
 
     def solve_step(self):
         is_assigned = False
 
-        csp = CSP.model(self)
+        # TODO: this should probably pass in the game constraints
+        csp = solution.model(self)
 
-        solver = BT(csp)
+        solver = Backtrack(csp)
         solver.bt_search_MS(prop_GAC)
-        for var in csp.get_vars():
 
+        for var in csp.get_vars():
+            try:
+                cell = var.name.split()
+                row = int(cell[0])
+                col = int(cell[1])
+            except:
+                # need the variable to be on the board
+                continue
+
+            if var.get_assigned_value() == 1:
+                if not self.board[row][col].is_flag():
+                    self.flag(row, col)
+                    is_assigned = True
+                elif var.get_assigned_value() == 0:
+                    if not self.is_show(row, col):
+                        self.reveal(row, col)
+                        is_assigned = True
+
+        return is_assigned
 
     # TODO: CLARA AND NOLAN DISCUSS: do we need an update surrounding? I think how we hide or show value naturally does this
     def update_surrounding(self, row, col):
@@ -248,7 +303,13 @@ class Board:
         # formerly, it updated the surrounding values
         # I took value out of the parameters, too
 
-    def show(self):
+    def get_value(self, row, col):
+        """
+        Get the value of the given (row, col)
+        """
+        return self.board[row][col][0]
+
+    def pretty_print(self):
         """
         Pretty prints the rows of the board for inspection
 
@@ -259,11 +320,10 @@ class Board:
 
 
 # some tests meant to show functionality, should be deleted eventually
-b = Board(9, 9, 10)
-b.show()
-b.reveal(2, 1)
-print()
-b.show()
+def main():
+    b = Board(9, 9, 10)
+    b.solve()
+    if b.is_win():
+        b.pretty_print()
 
-print(b.is_loss())
-print(b.is_win())
+main()

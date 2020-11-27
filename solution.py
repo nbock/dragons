@@ -1,4 +1,3 @@
-from game import *
 from CSP import *
 import itertools
 
@@ -8,24 +7,23 @@ MINES = 10
 
 # TODO: NOTE TO SELF (NOLAN): might need to initilaize the board with position
 # ...now I think I might want to remove it
-def model():
+def model(board):
     csp = CSP()
 
     variables = list()
-    board = Board(ROWS, COLS, MINES)
 
     # initialize the domains
     for row in range(ROWS):
         temp_row = list()
         for col in range(COLS):
-            # name = str(row) + " " + str(col)
+            name = str(row) + " " + str(col)
             if board.is_flag(row, col):
                 domain = [1]
             elif board.is_show(row, col):
                 domain = [0]
             else:
                 domain = [0, 1]
-            var = Variable(domain)
+            var = Variable(name, domain)
             temp_row.append(var)
             csp.add_variable(var)
         variables.append(temp_row)
@@ -44,10 +42,10 @@ def model():
                 unassigned.append(variables[row][col])
 
             # below is broken
-            if board.is_show(row, col) and not board[row][col][0] == 0:
+            if board.is_show(row, col) and not board.get_value(row, col) == 0:
                 surrounding = board.get_surrounding(row, col)
                 scope = list()
-                sum1 = board[row][col][0]
+                sum1 = board.get_value(row, col)
                 for neighbor in surrounding:
                     # checks the flag status
                     if neighbor[2]:
@@ -55,12 +53,14 @@ def model():
                     if not neighbor[1] and not neighbor[2]:
                         # if hidden and not flagged
                         scope.append(variables[row][col])
+                name = str(row) + " " + str(col)
                 if scope:
                     constraints.append([scope, sum1])
 
-        """ Not sure if we need this so didn't implement remaining mines
+        # Not sure if we need this so didn't implement remaining mines
+        """
         if len(unassigned) <= 20:
-            constraints.append(unassinged, board.remaining_mines)
+            constraints.append(["endgame", unassigned, board.remaining_mines])
         """
 
         # sort by length of scope
@@ -87,7 +87,7 @@ def model():
         ol_var = list()
 
         # Add new constraints if two constraints have at least two same variables in scope
-        for i in range(len(cos) - 1):
+        for i in range(len(constraints) - 1):
             con1 = constraints[i]
             for j in range(i + 1, len(constraints)):
                 con2 = constraints[j]
@@ -97,8 +97,12 @@ def model():
                     con2_vars = set(con2[0]) - ol_vars
                     con1_sum = con1[1]
                     con2_sum = con2[1]
+                    name = ""
 
                     if not ol_vars in ol_set:
+                        for i in ol_vars:
+                            name += i.name + ", "
+                        name = "(" + name + ")"
                         var = Variable(list(range(len(ol_vars)+1)))
                         csp.add_var(var)
                         ol_var.append(var)
@@ -109,8 +113,8 @@ def model():
 
                     con1_vars.add(var)
                     con2_vars.add(var)
-                    ol_cons.append([list(con1_vars), con1_sum])
-                    ol_cons.append([list(con2_vars), con2_sum])
+                    ol_cons.append(["", list(con1_vars), con1_sum])
+                    ol_cons.append(["", list(con2_vars), con2_sum])
 
         constraints.extend(ol_cons)
 
@@ -126,8 +130,8 @@ def model():
 def satisfy_tuples(scope, sum1):
     product_list = list()
 
-    for var in scope:
-        product_list.append(var.domain())
+    for variable in scope:
+        product_list.append(variable.domain)
 
     product = list(itertools.product(*product_list))
     tuples = list()

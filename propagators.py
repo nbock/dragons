@@ -82,12 +82,12 @@ def prop_GAC(csp, newVar=None):
 
     queue = []
     pruned = []
-    cons = csp.get_all_cons()
+    cons = csp.get_constraints()
 
     if not newVar:
         queue = cons.copy()
     else:
-        queue = csp.get_constraints(newVar).copy()
+        queue = csp.get_constraints_var(newVar).copy()
 
     # For looping queue use an indicator count. It avoids keep append and
     # remove items in the queue list that may slow down the program.
@@ -99,7 +99,7 @@ def prop_GAC(csp, newVar=None):
 
         for i in range(len(scope)):
             var = scope[i]
-            curdom = var.cur_domain()
+            curdom = var.curr_domain()
             found = False
             for val in curdom:
                 if con.has_support(var, val):
@@ -108,12 +108,12 @@ def prop_GAC(csp, newVar=None):
                     found = True
                     var.prune_value(val)
                     pruned.append((var, val))
-                    if not var.cur_domain_size():
+                    if not var.current_domain_size():
                         queue = []
                         return (False, pruned)
 
             if found:
-                cons = csp.get_constraints(var)
+                cons = csp.get_constraints_var(var)
                 for c in cons:
                     if c not in queue[count:]:
                         queue.append(c)

@@ -2,9 +2,13 @@
 CSP Class and necessary dependencies
 '''
 
+import time
+import functools
+
 class Variable:
     ''' CSP variables '''
-    def __init__(self, domain=list()):
+    def __init__(self, name, domain=list()):
+        self.name = name # name, maybe we should change to position?
         self.domain = domain
         # is currentdomain necessary?!
         self.currentdomain = [True] * len(domain)
@@ -19,7 +23,17 @@ class Variable:
         return(len(self.domain))
 
     def domain(self):
-        return self.domain
+        return(list(self.domain))
+
+    def curr_domain(self):
+        vals = list()
+        if self.is_assigned():
+            vals.append(self.get_assigned_value())
+        else:
+            for i, val in enumerate(self.domain):
+                if self.currentdomain[i]:
+                    vals.append(val)
+        return vals
 
     # pruning methods!
     def prune(self, value):
@@ -40,6 +54,14 @@ class Variable:
                 if self.currentdomain[i]:
                     values.append(value)
         return values
+
+    def prune_value(self, value):
+        '''Remove value from CURRENT domain'''
+        self.currentdomain[self.value_index(value)] = False
+
+    def unprune_value(self, value):
+        '''Restore value to CURRENT domain'''
+        self.currentdomain[self.value_index(value)] = True
 
     def current_domain(self, value):
         '''
@@ -81,6 +103,9 @@ class Variable:
 
     def get_assigned_value(self):
         return self.assignedValue
+
+    def value_index(self, value):
+        return self.domain.index(value)
 
 class Constraint:
     def __init__(self, scope):
@@ -140,12 +165,16 @@ class CSP:
         self.vars = vars
         self.cons = list()
         self.map = dict()
-        for variable in vars:
+        '''
+        for v in vars:
             self.add_variable(v)
+        '''
 
     def add_variable(self, var):
         if not type(var) is Variable:
-            raise TypeError("All variables should be Variables")
+            print("Must add a variable object")
+        elif var in self.map:
+            print("Trying to add variable ", var.name, " to a CSP that already has it")
         else:
             self.vars.append(var)
             self.map[var] = list()
@@ -157,16 +186,16 @@ class CSP:
             if not variable in self.map:
                 return
             self.map[variable].append(cons)
-        self.cons.append(c)
+        self.cons.append(cons)
 
     def get_constraints(self):
         return self.cons
 
-    def get_constraint(self, variable):
+    def get_constraints_var(self, variable):
         '''
         get a constraint with a specific variable in it
         '''
-        return list(self.map[var])
+        return list(self.map[variable])
 
     def get_vars(self):
         return list(self.vars)
@@ -291,7 +320,7 @@ class Backtrack:
             if self.TRACE:
                 print('  ' * level, "bt_recurse var = ", var)
 
-            for val in var.cur_domain():
+            for val in var.curr_domain():
 
                 if self.TRACE:
                     print('  ' * level, "bt_recurse trying", var, "=", val)
@@ -372,7 +401,7 @@ class Backtrack:
             if self.TRACE:
                 print('  ' * level, "bt_recurse var = ", var)
 
-            for val in var.cur_domain():
+            for val in var.curr_domain():
 
                 if self.TRACE:
                     print('  ' * level, "bt_recurse trying", var, "=", val)
@@ -405,7 +434,7 @@ class Backtrack:
         Would be faster to use heap...but this is not production code.
         '''
         for var in self.unasgn_vars:
-            if var.cur_domain_size() == 1:
+            if var.domain_size() == 1:
                 self.unasgn_vars.remove(var)
                 return var
 
