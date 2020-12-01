@@ -1,3 +1,4 @@
+# Overview
 AI [Minesweeper](https://en.wikipedia.org/wiki/Minesweeper_(video_game)) solver!
 
 Developed by [Nolan Bock](https://www.linkedin.com/in/nbock/) and [Maria Clara Soares Bezerra](https://www.linkedin.com/in/maria-clara-bezerra-09293a137/)
@@ -24,6 +25,11 @@ based on a routine specified through propagators.py.
 
 
 
-STATUS UPDATE FOR CLARA & NOLAN
-The variable get_assigned_value function is always None, so that needs to be fixed
-Something is broken with solver.bt_search_MS(prop_GAC)
+# Running a test
+The contents of minesweeper.py can be edited to run a sample solution. Use `python3 minesweeper.py` to see a 16x16 bard solved.
+
+# TODO
+- Add function documentation for everything
+- Think about if we want random variable assignment or not
+- Think about GUI
+- Slides
